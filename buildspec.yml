@@ -3,23 +3,37 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: 17  # Upgrade to Java 17 for SonarCloud compatibility
+      java: corretto17  # ✅ Ensure Java 17 is installed
+    commands:
+      - echo "Setting up Java 17..."
+      - export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))  # ✅ Fix JAVA_HOME
+      - export PATH=$JAVA_HOME/bin:$PATH  # ✅ Ensure Java is in the path
+      - echo "JAVA_HOME is set to $JAVA_HOME"
+      - yum install -y jq
+
   pre_build:
     commands:
-      - echo "Installing required dependencies..."
-      - java -version
-      - mvn --version
+      - echo "Entering pre_build phase..."
+      - echo "Checking Java version..."
+      - java -version  # ✅ Verify Java 17 is set correctly
+      - echo "Checking Maven version..."
+      - mvn --version  # ✅ This should now work
+      - echo "Running SonarCloud scan..."
+      - mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.organization=your_organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+
   build:
     commands:
-      - echo "Building project..."
+      - echo "Entering build phase..."
       - mvn clean package
-      - echo "Running JaCoCo Test Coverage..."
-      - mvn test jacoco:report
-      - echo "Running SonarCloud Analysis..."
-      - mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.organization=your_organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+      - mvn verify  # ✅ Run tests (JaCoCo)
+      - echo "Running Software Composition Analysis (SCA)..."
+      - mvn org.owasp:dependency-check-maven:check  # ✅ OWASP Dependency-Check for SCA
+
   post_build:
     commands:
-      - echo "Build and security scan completed successfully"
+      - echo "Build completed successfully!"
+      - echo "Generating JaCoCo code coverage report..."
+      - mvn jacoco:report  # ✅ Generate JaCoCo report
 
 artifacts:
   files:
@@ -28,4 +42,4 @@ artifacts:
 
 cache:
   paths:
-    - '/root/.m2/**/*'
+    - '/root/.m2/**/*'  # ✅ Cache Maven dependencies
