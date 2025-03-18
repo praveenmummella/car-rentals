@@ -30,12 +30,12 @@ pre_build:
       - echo "Pre-build: Setting up environment"
       - mvn clean install  # This line remains as it is
 
-  build:
+build:
     commands:
       - echo "Running SonarCloud analysis..."
       - mvn sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
 
-  post_build:
+post_build:
     commands:
       - echo "Build completed successfully."
 
