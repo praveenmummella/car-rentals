@@ -19,8 +19,8 @@ phases:
       - yum install -y jq
       - echo "Installing Docker..."
       - yum install -y docker
-      - systemctl start docker   # Use systemctl instead of service
-      - systemctl enable docker  # Ensure Docker starts on boot
+      - echo "Starting Docker daemon..."
+      - nohup /usr/bin/dockerd &  # Use nohup to run docker daemon in the background
       - docker --version
 
 pre_build:
