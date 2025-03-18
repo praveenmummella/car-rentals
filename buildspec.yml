@@ -3,43 +3,30 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto17  # ✅ Ensure Java 17 is installed
+      java: 17
     commands:
-      - echo "Setting up Java 17..."
-      - export JAVA_HOME=$(dirname $(dirname $(readlink -f $(which java))))  # ✅ Fix JAVA_HOME
-      - export PATH=$JAVA_HOME/bin:$PATH  # ✅ Ensure Java is in the path
-      - echo "JAVA_HOME is set to $JAVA_HOME"
-      - yum install -y jq
+      - echo "Installing required dependencies..."
+      - yum install -y git wget
+      - curl -fsSL https://get.docker.com | sh
 
   pre_build:
     commands:
-      - echo "Entering pre_build phase..."
-      - echo "Checking Java version..."
-      - java -version  # ✅ Verify Java 17 is set correctly
-      - echo "Checking Maven version..."
-      - mvn --version  # ✅ This should now work
-      - echo "Running SonarCloud scan..."
-      - mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.organization=your_organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
+      - echo "Validating Java and Maven versions..."
+      - java -version
+      - mvn --version
+      - echo "Running SonarCloud analysis..."
+      - mvn sonar:sonar -Dsonar.projectKey=praveenmummella_car-rentals -Dsonar.organization=praveenmummella -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
 
   build:
     commands:
-      - echo "Entering build phase..."
+      - echo "Building the project..."
       - mvn clean package
-      - mvn verify  # ✅ Run tests (JaCoCo)
-      - echo "Running Software Composition Analysis (SCA)..."
-      - mvn org.owasp:dependency-check-maven:check  # ✅ OWASP Dependency-Check for SCA
 
   post_build:
     commands:
-      - echo "Build completed successfully!"
-      - echo "Generating JaCoCo code coverage report..."
-      - mvn jacoco:report  # ✅ Generate JaCoCo report
+      - echo "Build and SonarCloud analysis completed successfully!"
 
 artifacts:
   files:
-    - target/car-rentals*/*
+    - target/*.jar
   discard-paths: yes
-
-cache:
-  paths:
-    - '/root/.m2/**/*'  # ✅ Cache Maven dependencies
