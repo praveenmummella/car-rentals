@@ -25,7 +25,7 @@ phases:
       - chmod 666 /var/run/docker.sock
       - docker --version
 
-  pre_build:
+pre_build:
     commands:
       - echo "Pre-build: Setting up environment"
       - mvn clean install  # This line remains as it is
