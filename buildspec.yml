@@ -18,7 +18,6 @@ phases:
       - yum update -y
       - yum install -y jq
       - echo "Installing Docker..."
-      - amazon-linux-extras enable docker
       - yum install -y docker
       - service docker start
       - usermod -aG docker $USER
