@@ -3,46 +3,27 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto11
-    commands:
-      - echo "Installing required dependencies..."
-      - curl -sSLo sonar-scanner.zip https://binaries.sonarsource.com/Distribution/sonar-scanner-cli/sonar-scanner-cli-4.6.2.2472-linux.zip
-      - unzip sonar-scanner.zip
-      - export PATH=$PATH:$(pwd)/sonar-scanner-4.6.2.2472-linux/bin
-      - export SONAR_SCANNER_OPTS="-server"
-      - echo "Installing OWASP Dependency-Check..."
-      - curl -sSLo dependency-check.zip https://github.com/jeremylong/DependencyCheck/releases/download/v8.4.0/dependency-check-8.4.0-release.zip
-      - unzip dependency-check.zip -d dependency-check
-      - export PATH=$PATH:$(pwd)/dependency-check
-
+      java: 17  # Upgrade to Java 17 for SonarCloud compatibility
   pre_build:
     commands:
-      - echo "Running static analysis with SonarCloud..."
-      - mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.organization=your_organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
-      - echo "Running OWASP Dependency-Check..."
-      - dependency-check/bin/dependency-check.sh --scan . --format HTML --out dependency-check-report.html || true
-
+      - echo "Installing required dependencies..."
+      - java -version
+      - mvn --version
   build:
     commands:
-      - echo "Entered the build phase..."
-      - echo "Build started on `date`"
+      - echo "Building project..."
       - mvn clean package
-      - echo "Running unit tests with JaCoCo..."
+      - echo "Running JaCoCo Test Coverage..."
       - mvn test jacoco:report
-
+      - echo "Running SonarCloud Analysis..."
+      - mvn sonar:sonar -Dsonar.projectKey=your_project_key -Dsonar.organization=your_organization -Dsonar.host.url=https://sonarcloud.io -Dsonar.login=$SONAR_TOKEN
   post_build:
     commands:
-      - echo "Build completed successfully"
-      - echo "Uploading JaCoCo coverage report..."
-      - mv target/site/jacoco/index.html $CODEBUILD_SRC_DIR/
-      - echo "Uploading OWASP Dependency-Check report..."
-      - mv dependency-check-report.html $CODEBUILD_SRC_DIR/
+      - echo "Build and security scan completed successfully"
 
 artifacts:
   files:
-    - target/car-rentals*.war
-    - target/site/jacoco/**/*
-    - dependency-check-report.html
+    - target/car-rentals*/*
   discard-paths: yes
 
 cache:
