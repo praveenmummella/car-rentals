@@ -7,7 +7,7 @@ env:
     SONAR_PROJECT_KEY: "praveenmummella_car-rentals"
 
   secrets-manager:
-    SONAR_TOKEN: "your-secret-name:SONAR_TOKEN"
+    SONAR_TOKEN: "SonarCloudToken:SONAR_TOKEN"  # Ensure this matches your AWS Secrets Manager secret name
 
 phases:
   install:
