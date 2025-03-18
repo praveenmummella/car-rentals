@@ -19,9 +19,8 @@ phases:
       - yum install -y jq
       - echo "Installing Docker..."
       - yum install -y docker
-      - service docker start
-      - usermod -aG docker $USER
-      - chmod 666 /var/run/docker.sock
+      - systemctl start docker   # Use systemctl instead of service
+      - systemctl enable docker  # Ensure Docker starts on boot
       - docker --version
 
 pre_build:
