@@ -5,9 +5,10 @@ env:
     SONAR_HOST_URL: "https://sonarcloud.io"
     SONAR_ORG: "praveenmummella"
     SONAR_PROJECT_KEY: "praveenmummella_car-rentals"
-  
-  secrets-manager:
-    SONAR_TOKEN: "SonarCloudToken:SONAR_TOKEN"  # Ensure this matches your AWS Secrets Manager secret name
+    S3_BUCKET_NAME: "your-s3-bucket-name"  # Change this to your actual S3 bucket
+
+  parameter-store:
+    SONAR_TOKEN: "/sonar/token"  # Fetching token from AWS Systems Manager Parameter Store
 
 phases:
   install:
@@ -16,24 +17,34 @@ phases:
     commands:
       - echo "Installing dependencies..."
       - yum update -y
-      - yum install -y jq
+      - yum install -y jq unzip
       - echo "Installing Docker..."
       - yum install -y docker
       - echo "Starting Docker daemon..."
-      - nohup /usr/bin/dockerd &  # Use nohup to run docker daemon in the background
+      - nohup /usr/bin/dockerd &  # Run Docker daemon in the background
       - docker --version
+
 pre_build:
     commands:
       - echo "Pre-build: Setting up environment"
-      - mvn clean install  # Build the project to ensure dependencies are installed
+      - mvn clean install  # Build project and install dependencies
 
-build:
+  build:
     commands:
+      # ---------------------- SAST (SonarCloud) ---------------------- 
       - echo "Running SonarCloud analysis for SAST..."
-      - mvn sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
-      
+      - mvn sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN -X  # Verbose Logging
+
+      # ---------------------- SCA (Dependency Check) ---------------------- 
       - echo "Running OWASP Dependency-Check for SCA..."
-      - mvn org.owasp:dependency-check-maven:check
+      - mvn org.owasp:dependency-check-maven:check -X  # Verbose Logging for Debugging
+      - echo "Verifying OWASP report exists..."
+      - ls -l target/dependency-check-report.*
+
+      # ---------------------- Upload SCA Report to S3 ---------------------- 
+      - echo "Uploading OWASP Dependency-Check reports to S3..."
+      - aws s3 cp target/dependency-check-report.html s3://$S3_BUCKET_NAME/reports/dependency-check-report.html
+      - aws s3 cp target/dependency-check-report.xml s3://$S3_BUCKET_NAME/reports/dependency-check-report.xml
 
 post_build:
     commands:
