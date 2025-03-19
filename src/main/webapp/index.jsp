@@ -1,5 +1,3 @@
-<%@ page language="java" contentType="text/html; charset=UTF-8" pageEncoding="UTF-8"%>
-<%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -68,13 +66,12 @@
             <li>Browse and Rent Cars</li>
             <li>View Car Details</li>
             <li>Book Car Rentals Online</li>
-            <li>Manage Bookings</li>
         </ul>
 
         <!-- Car Search Form -->
         <div class="form-container">
             <h2>Search for Cars</h2>
-            <form action="index.jsp" method="get">
+            <form id="searchForm">
                 <label for="location">Pick-Up Location:</label>
                 <input type="text" id="location" name="location" placeholder="Enter location">
                 <label for="date">Pick-Up Date:</label>
@@ -85,39 +82,13 @@
 
         <!-- Display Available Cars -->
         <h2>Available Cars</h2>
-        <ul class="car-list">
-            <li>
-                <strong>Car Model:</strong> Toyota Corolla<br>
-                <strong>Location:</strong> New York<br>
-                <strong>Available From:</strong> 2025-04-01
-            </li>
-            <li>
-                <strong>Car Model:</strong> Honda Civic<br>
-                <strong>Location:</strong> Los Angeles<br>
-                <strong>Available From:</strong> 2025-04-05
-            </li>
+        <ul id="carList" class="car-list">
+            <!-- Car Listings will appear here -->
         </ul>
-
-        <!-- Show Search Results (dynamically generated) -->
-        <%
-            String location = request.getParameter("location");
-            String date = request.getParameter("date");
-
-            if (location != null && !location.isEmpty() && date != null && !date.isEmpty()) {
-                out.println("<h3>Search Results for " + location + " on " + date + ":</h3>");
-                out.println("<ul class='car-list'>");
-
-                // For demonstration, hardcoded results. This can be replaced with database-driven dynamic content.
-                out.println("<li><strong>Car Model:</strong> Toyota Corolla, <strong>Location:</strong> " + location + ", <strong>Available From:</strong> 2025-04-01</li>");
-                out.println("<li><strong>Car Model:</strong> Honda Civic, <strong>Location:</strong> " + location + ", <strong>Available From:</strong> 2025-04-05</li>");
-
-                out.println("</ul>");
-            }
-        %>
 
         <!-- About Us and Contact Information -->
         <h3>Our Services Include:</h3>
-        <p>At Praveen Car Rentals, we offer a wide range of cars at competitive prices for your convenience. Whether you're looking for a compact car for city driving or a luxury car for a special occasion, we've got you covered.</p>
+        <p>At Praveen Car Rentals, we offer a wide range of cars at competitive prices for your convenience.</p>
         
         <h3>Contact Us:</h3>
         <p>Feel free to reach out to our support team at: <strong>support@praveencarrentals.com</strong></p>
@@ -126,6 +97,42 @@
     <footer>
         <p>&copy; 2025 Praveen Car Rentals - All Rights Reserved</p>
     </footer>
+
+    <script>
+        // Simple JavaScript to handle form submission and display results
+        document.getElementById("searchForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+
+            const location = document.getElementById("location").value;
+            const date = document.getElementById("date").value;
+            const carList = document.getElementById("carList");
+
+            // Clear previous results
+            carList.innerHTML = '';
+
+            // Dummy car data (replace with dynamic content if needed)
+            const cars = [
+                { model: 'Toyota Corolla', location: 'New York', availableFrom: '2025-04-01' },
+                { model: 'Honda Civic', location: 'Los Angeles', availableFrom: '2025-04-05' }
+            ];
+
+            // Filter cars based on search
+            const filteredCars = cars.filter(car => {
+                return car.location.toLowerCase().includes(location.toLowerCase()) && (car.availableFrom >= date);
+            });
+
+            // Display results
+            if (filteredCars.length > 0) {
+                filteredCars.forEach(car => {
+                    const li = document.createElement('li');
+                    li.innerHTML = `<strong>Car Model:</strong> ${car.model}<br><strong>Location:</strong> ${car.location}<br><strong>Available From:</strong> ${car.availableFrom}`;
+                    carList.appendChild(li);
+                });
+            } else {
+                carList.innerHTML = '<li>No cars found matching your criteria.</li>';
+            }
+        });
+    </script>
 
 </body>
 </html>
