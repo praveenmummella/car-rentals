@@ -1,7 +1,19 @@
 <!DOCTYPE web-app PUBLIC
  "-//Sun Microsystems, Inc.//DTD Web Application 2.3//EN"
- "http://java.sun.com/dtd/web-app_2_3.dtd" >
+ "http://java.sun.com/dtd/web-app_2_3.dtd">
 
 <web-app>
-  <display-name>Archetype Created Web Application</display-name>
+  <display-name>Car Rentals Web Application</display-name>
+
+  <!-- BookCarServlet Configuration -->
+  <servlet>
+    <servlet-name>BookCarServlet</servlet-name>
+    <servlet-class>yourpackage.BookCarServlet</servlet-class>
+  </servlet>
+
+  <servlet-mapping>
+    <servlet-name>BookCarServlet</servlet-name>
+    <url-pattern>/BookCarServlet</url-pattern>
+  </servlet-mapping>
+
 </web-app>
