@@ -29,7 +29,7 @@ pre_build:
       - echo "Pre-build: Setting up environment"
       - mvn clean install  # Build project and install dependencies
 
-  build:
+build:
     commands:
       # ---------------------- SAST (SonarCloud) ---------------------- 
       - echo "Running SonarCloud analysis for SAST..."
