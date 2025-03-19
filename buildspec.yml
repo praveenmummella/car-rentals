@@ -5,7 +5,7 @@ env:
     SONAR_HOST_URL: "https://sonarcloud.io"
     SONAR_ORG: "praveenmummella"
     SONAR_PROJECT_KEY: "praveenmummella_car-rentals"
-
+  
   secrets-manager:
     SONAR_TOKEN: "SonarCloudToken:SONAR_TOKEN"  # Ensure this matches your AWS Secrets Manager secret name
 
@@ -23,17 +23,20 @@ phases:
       - nohup /usr/bin/dockerd &  # Use nohup to run docker daemon in the background
       - docker --version
 
-pre_build:
+  pre_build:
     commands:
       - echo "Pre-build: Setting up environment"
-      - mvn clean install  # This line remains as it is
+      - mvn clean install  # Build the project to ensure dependencies are installed
 
-build:
+  build:
     commands:
-      - echo "Running SonarCloud analysis..."
+      - echo "Running SonarCloud analysis for SAST..."
       - mvn sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
+      
+      - echo "Running OWASP Dependency-Check for SCA..."
+      - mvn org.owasp:dependency-check-maven:check
 
-post_build:
+  post_build:
     commands:
       - echo "Build completed successfully."
 
