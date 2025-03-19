@@ -70,6 +70,20 @@
         <version>3.0.0-M7</version>
       </plugin>
 
+      <!-- OWASP Dependency-Check Plugin for SCA -->
+      <plugin>
+        <groupId>org.owasp</groupId>
+        <artifactId>dependency-check-maven</artifactId>
+        <version>8.4.2</version>
+        <executions>
+          <execution>
+            <goals>
+              <goal>check</goal>
+            </goals>
+          </execution>
+        </executions>
+      </plugin>
+
       <!-- WAR Plugin (Updated to Fix Issue) -->
       <plugin>
         <groupId>org.apache.maven.plugins</groupId>
@@ -93,5 +107,4 @@
       <url>http://172.31.4.16:8081/repository/car-rentals-release/</url>
     </repository>
   </distributionManagement>
-
 </project>
