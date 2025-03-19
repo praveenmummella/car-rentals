@@ -22,13 +22,12 @@ phases:
       - echo "Starting Docker daemon..."
       - nohup /usr/bin/dockerd &  # Use nohup to run docker daemon in the background
       - docker --version
-
-  pre_build:
+pre_build:
     commands:
       - echo "Pre-build: Setting up environment"
       - mvn clean install  # Build the project to ensure dependencies are installed
 
-  build:
+build:
     commands:
       - echo "Running SonarCloud analysis for SAST..."
       - mvn sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN
@@ -36,7 +35,7 @@ phases:
       - echo "Running OWASP Dependency-Check for SCA..."
       - mvn org.owasp:dependency-check-maven:check
 
-  post_build:
+post_build:
     commands:
       - echo "Build completed successfully."
 
