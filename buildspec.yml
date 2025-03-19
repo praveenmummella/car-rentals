@@ -2,55 +2,67 @@ version: 0.2
 
 env:
   variables:
-    SONAR_HOST_URL: "https://sonarcloud.io"
-    SONAR_ORG: "praveenmummella"
-    SONAR_PROJECT_KEY: "praveenmummella_car-rentals"
-    S3_BUCKET_NAME: "your-s3-bucket-name"  # Change this to your actual S3 bucket
-
+    SONAR_PROJECT_KEY: "your-sonar-project-key"
+    SONAR_ORG: "your-sonar-organization"
+    SONAR_TOKEN: "your-sonar-token"
+    ZAP_DAST_URL: "https://your-staging-url.com"
+    ZAP_REPORT_FILE: "zap_report.html"
+    SECURITY_HUB_REGION: "us-east-1"
+    LAMBDA_FUNCTION_NAME: "SecurityScanLambda"
   parameter-store:
-    SONAR_TOKEN: "/sonar/token"  # Fetching token from AWS Systems Manager Parameter Store
+    AWS_ACCESS_KEY_ID: "/devsecops/aws_access_key"
+    AWS_SECRET_ACCESS_KEY: "/devsecops/aws_secret_key"
+    SONAR_TOKEN: "/devsecops/sonar_token"
+    GITHUB_ACCESS_TOKEN: "/devsecops/github_token"
 
 phases:
   install:
     runtime-versions:
       java: corretto17
+      php: 8.1
     commands:
       - echo "Installing dependencies..."
-      - yum update -y
-      - yum install -y jq unzip
-      - echo "Installing Docker..."
-      - yum install -y docker
-      - echo "Starting Docker daemon..."
-      - nohup /usr/bin/dockerd &  # Run Docker daemon in the background
-      - docker --version
+      - apt-get update && apt-get install -y unzip wget
+      - curl -sSL https://getcomposer.org/installer | php
+      - mv composer.phar /usr/local/bin/composer
+      - composer install
+      - pip install --upgrade awscli
+      - npm install -g aws-cdk
+      - export PATH=$HOME/.local/bin:$PATH
 
-pre_build:
+  pre_build:
     commands:
-      - echo "Pre-build: Setting up environment"
-      - mvn clean install  # Build project and install dependencies
+      - echo "Running SAST with SonarCloud..."
+      - mvn clean verify sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url="https://sonarcloud.io" -Dsonar.login=$SONAR_TOKEN
 
-build:
+  build:
     commands:
-      # ---------------------- SAST (SonarCloud) ---------------------- 
-      - echo "Running SonarCloud analysis for SAST..."
-      - mvn sonar:sonar -Dsonar.projectKey=$SONAR_PROJECT_KEY -Dsonar.organization=$SONAR_ORG -Dsonar.host.url=$SONAR_HOST_URL -Dsonar.login=$SONAR_TOKEN -X  # Verbose Logging
+      - echo "Building the application..."
+      - mvn package
 
-      # ---------------------- SCA (Dependency Check) ---------------------- 
-      - echo "Running OWASP Dependency-Check for SCA..."
-      - mvn org.owasp:dependency-check-maven:check -X  # Verbose Logging for Debugging
-      - echo "Verifying OWASP report exists..."
-      - ls -l target/dependency-check-report.*
-
-      # ---------------------- Upload SCA Report to S3 ---------------------- 
-      - echo "Uploading OWASP Dependency-Check reports to S3..."
-      - aws s3 cp target/dependency-check-report.html s3://$S3_BUCKET_NAME/reports/dependency-check-report.html
-      - aws s3 cp target/dependency-check-report.xml s3://$S3_BUCKET_NAME/reports/dependency-check-report.xml
-
-post_build:
+  post_build:
     commands:
-      - echo "Build completed successfully."
+      - echo "Running OWASP Dependency-Check (SCA)..."
+      - curl -sSL https://jeremylong.github.io/DependencyCheck/dependency-check-8.0.0-release.zip -o dependency-check.zip
+      - unzip dependency-check.zip -d /opt
+      - /opt/dependency-check/bin/dependency-check.sh --project "MyProject" --scan . --format "HTML" --out dependency-check-report.html
+      
+      - echo "Running OWASP ZAP DAST scan..."
+      - docker run --rm -v $(pwd):/zap/wrk/:rw -t owasp/zap2docker-stable zap-baseline.py -t $ZAP_DAST_URL -r $ZAP_REPORT_FILE
+      
+      - echo "Uploading security reports to S3..."
+      - aws s3 cp dependency-check-report.html s3://your-security-reports-bucket/
+      - aws s3 cp $ZAP_REPORT_FILE s3://your-security-reports-bucket/
+      
+      - echo "Triggering AWS Lambda for security analysis..."
+      - aws lambda invoke --function-name $LAMBDA_FUNCTION_NAME --region $SECURITY_HUB_REGION response.json
+      
+      - echo "Publishing results to AWS Security Hub..."
+      - aws securityhub batch-import-findings --region $SECURITY_HUB_REGION --findings file://security-findings.json
 
 artifacts:
   files:
-    - '**/*'
-  discard-paths: yes
+    - target/*.jar
+    - dependency-check-report.html
+    - $ZAP_REPORT_FILE
+    - security-findings.json
