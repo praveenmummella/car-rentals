@@ -37,38 +37,3 @@
         </plugins>
     </build>
 </project>
-
-<!-- Updated buildspec.yml -->
-version: 0.2
-phases:
-  install:
-    runtime-versions:
-      java: corretto17
-  pre_build:
-    commands:
-      - echo "Starting pre-build stage..."
-      - mvn clean install -DskipTests
-  build:
-    commands:
-      - echo "Running tests and generating JaCoCo coverage..."
-      - mvn test jacoco:report
-  post_build:
-    commands:
-      - echo "Generating code coverage report..."
-      - mvn jacoco:report
-      - echo "Build and analysis completed!"
-artifacts:
-  files:
-    - target/site/jacoco/index.html
-    - target/site/jacoco/jacoco.xml
-  discard-paths: yes
-
-# SonarCloud configuration
-sonar.projectKey=your_project_key
-sonar.organization=your_organization
-sonar.host.url=https://sonarcloud.io
-sonar.sources=src/main/java
-sonar.tests=src/test/java
-sonar.java.binaries=target/classes
-sonar.jacoco.reportPaths=target/site/jacoco/jacoco.xml
-sonar.coverage.exclusions=**/config/**
