@@ -11,15 +11,14 @@ phases:
   build:
     commands:
       - echo "Running tests and generating JaCoCo coverage..."
-      - mvn test jacoco:report
+      - mvn test
+      - mvn jacoco:report
   post_build:
     commands:
-      - echo "Generating code coverage report..."
-      - mvn jacoco:report
-      - echo "Build and analysis completed!"
+      - echo "Code coverage report generated successfully."
+      - ls -lah target/site/jacoco/  # Debugging to ensure files exist
 
 artifacts:
   files:
-    - target/site/jacoco/index.html
-    - target/site/jacoco/jacoco.xml
-  discard-paths: yes
+    - target/site/jacoco/**/*
+  discard-paths: no
