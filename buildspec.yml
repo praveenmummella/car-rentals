@@ -4,19 +4,24 @@ phases:
   install:
     runtime-versions:
       java: corretto17
+
   pre_build:
     commands:
       - echo "Starting pre-build stage..."
       - mvn clean install -DskipTests
+
   build:
     commands:
       - echo "Running tests and generating JaCoCo coverage..."
       - mvn test
+      - echo "Generating JaCoCo report..."
       - mvn jacoco:report
+      - echo "Verifying if the JaCoCo report is generated..."
+      - ls -lah target/site/jacoco/
+
   post_build:
     commands:
-      - echo "Code coverage report generated successfully."
-      - ls -lah target/site/jacoco/  # Debugging to ensure files exist
+      - echo "Build and analysis completed!"
 
 artifacts:
   files:
