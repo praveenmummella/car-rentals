@@ -3,28 +3,18 @@ version: 0.2
 phases:
   install:
     runtime-versions:
-      java: corretto17
-
+      java: corretto8
   pre_build:
     commands:
-      - echo "Starting pre-build stage..."
-      - mvn clean install -DskipTests
-
+      - echo "Running pre-build steps..."
+      - mvn clean
   build:
     commands:
-      - echo "Running tests with JaCoCo coverage..."
-      - mvn test  # Ensure tests run
-      - echo "Generating JaCoCo report..."
-      - mvn jacoco:report
-      - echo "Verifying if the JaCoCo report is generated..."
-      - ls -lah target/site/jacoco/ || echo "JaCoCo report missing!"
-
+      - echo "Building and testing the project..."
+      - mvn install
   post_build:
     commands:
-      - echo "Build and analysis completed!"
-
+      - echo "Build and test completed successfully."
 artifacts:
   files:
-    - target/site/jacoco/**/*
-    - target/jacoco.exec
-  discard-paths: no
+    - target/*.jar
