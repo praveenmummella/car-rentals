@@ -12,8 +12,8 @@ phases:
 
   build:
     commands:
-      - echo "Running tests and generating JaCoCo coverage..."
-      - mvn test
+      - echo "Running tests with JaCoCo coverage..."
+      - mvn verify   # Runs tests & collects coverage
       - echo "Generating JaCoCo report..."
       - mvn jacoco:report
       - echo "Verifying if the JaCoCo report is generated..."
@@ -26,4 +26,5 @@ phases:
 artifacts:
   files:
     - target/site/jacoco/**/*
+    - target/jacoco.exec
   discard-paths: no
